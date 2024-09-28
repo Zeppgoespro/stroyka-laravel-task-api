@@ -34,6 +34,12 @@ class PlatformProvider extends OrchidServiceProvider
     public function menu(): array
     {
         return [
+            /* Slider */
+            Menu::make('Sliders')
+                ->icon('bs.images')
+                ->route('platform.slider.list')
+                ->title('Manage Sliders'),
+            /* end Slider */
             Menu::make('Get Started')
                 ->icon('bs.book')
                 ->title('Navigation')

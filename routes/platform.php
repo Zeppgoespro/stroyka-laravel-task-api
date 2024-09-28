@@ -20,6 +20,9 @@ use App\Orchid\Screens\User\UserProfileScreen;
 use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
 
+use App\Orchid\Screens\SliderScreen;
+use App\Orchid\Screens\SliderEditScreen;
+
 /*
 |--------------------------------------------------------------------------
 | Dashboard Routes
@@ -102,3 +105,7 @@ Route::screen('/examples/charts', ExampleChartsScreen::class)->name('platform.ex
 Route::screen('/examples/cards', ExampleCardsScreen::class)->name('platform.example.cards');
 
 //Route::screen('idea', Idea::class, 'platform.screens.idea');
+
+// Main page slider
+Route::screen('sliders', SliderScreen::class)->name('platform.slider.list');
+Route::screen('sliders/edit/{slider?}', SliderEditScreen::class)->name('platform.slider.edit');
