@@ -37,7 +37,7 @@ class PlatformProvider extends OrchidServiceProvider
             /* Slider */
             Menu::make('Sliders')
                 ->icon('bs.images')
-                ->route('platform.slider.list')
+                ->route('platform.systems.sliders')
                 ->title('Manage Sliders'),
             /* end Slider */
             Menu::make('Get Started')

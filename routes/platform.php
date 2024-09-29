@@ -20,8 +20,8 @@ use App\Orchid\Screens\User\UserProfileScreen;
 use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
 
-use App\Orchid\Screens\SliderScreen;
-use App\Orchid\Screens\SliderEditScreen;
+use App\Orchid\Screens\Slider\SliderScreen;
+use App\Orchid\Screens\Slider\SliderEditScreen;
 
 /*
 |--------------------------------------------------------------------------
@@ -106,6 +106,21 @@ Route::screen('/examples/cards', ExampleCardsScreen::class)->name('platform.exam
 
 //Route::screen('idea', Idea::class, 'platform.screens.idea');
 
-// Main page slider
-Route::screen('sliders', SliderScreen::class)->name('platform.slider.list');
-Route::screen('sliders/edit/{slider?}', SliderEditScreen::class)->name('platform.slider.edit');
+// Main page sliders
+Route::screen('sliders', SliderScreen::class)
+    ->name('platform.systems.sliders')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push('Sliders', route('platform.systems.sliders')));
+
+Route::screen('sliders/create', SliderEditScreen::class)
+    ->name('platform.systems.sliders.create')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.systems.sliders')
+        ->push(__('Create'), route('platform.systems.sliders.create')));
+
+Route::screen('sliders/{slider}/edit', SliderEditScreen::class)
+    ->name('platform.systems.sliders.edit')
+    ->breadcrumbs(fn (Trail $trail, $slider) => $trail
+        ->parent('platform.systems.sliders')
+        ->push($slider->title, route('platform.systems.sliders.edit', $slider)));
