@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 class SliderScreen extends Screen
 {
     /**
-     * Query to fetch the list of sliders.
+     * Запрос для получения списка слайдеров.
      */
     public function query(): iterable
     {
@@ -27,35 +27,35 @@ class SliderScreen extends Screen
     }
 
     /**
-     * The name of the screen.
+     * Название экрана.
      */
     public function name(): ?string
     {
-        return 'Slider Management';
+        return 'Управление слайдерами';
     }
 
     /**
-     * The screen's description.
+     * Описание экрана.
      */
     public function description(): ?string
     {
-        return 'Manage the slider images displayed on the main page';
+        return 'Управление изображениями слайдера, отображаемыми на главной странице';
     }
 
     /**
-     * The screen's command bar with an "Add" button.
+     * Командная панель экрана с кнопкой "Добавить".
      */
     public function commandBar(): iterable
     {
         return [
-            Link::make('Add Slider')
+            Link::make('Добавить слайдер')
                 ->icon('bs.plus-circle')
                 ->route('platform.systems.sliders.create'),
         ];
     }
 
     /**
-     * The layout for displaying the list of sliders.
+     * Макет для отображения списка слайдеров.
      */
     public function layout(): iterable
     {
@@ -63,23 +63,35 @@ class SliderScreen extends Screen
             Layout::table('sliders', [
                 TD::make('id', 'ID'),
 
-                TD::make('image_path', 'Image')
-                    ->render(fn(Slider $slider) => "<img src='{$slider->image_path}' style='width: 150px;'/>"),
+                TD::make('image_path', 'Изображение')
+                ->render(function(Slider $slider) {
+                    $imagePath = $slider->is_published
+                        ? url('/sliders/' . basename($slider->image_path)) // Маршрут для опубликованных изображений слайдера
+                        : url($slider->image_path); // Неопубликованный слайдер (изображение из хранилища)
 
-                TD::make('title', 'Title'),
+                    return "<img src='{$imagePath}' style='width: 150px;' />";
+                }),
 
-                TD::make('description', 'Description'),
+                TD::make('title', 'Название'),
 
-                TD::make('Actions')
+                TD::make('description', 'Описание'),
+
+                TD::make('Действия')
                     ->render(function(Slider $slider) {
-                        $editButton = Link::make('Edit')->route('platform.systems.sliders.edit', $slider);
+                        $editButton = Link::make('Редактировать')->route('platform.systems.sliders.edit', $slider);
 
                         if (!$slider->is_published) {
-                            $publishButton = Button::make('Publish')
+                            $publishButton = Button::make('Опубликовать')
                                 ->method('publish')
-                                ->confirm('Publish this slider?')
+                                ->confirm('Опубликовать этот слайдер?')
                                 ->parameters(['id' => $slider->id]);
                             return $editButton . ' ' . $publishButton;
+                        } else if ($slider->is_published) {
+                            $unpublishButton = Button::make('Снять с публикации')
+                            ->method('unpublish')
+                            ->confirm('Снять этот слайдер с публикации?')
+                            ->parameters(['id' => $slider->id]);
+                        return $editButton . ' ' . $unpublishButton;
                         }
 
                         return $editButton;
@@ -92,24 +104,51 @@ class SliderScreen extends Screen
     {
         $slider = Slider::findOrFail($request->get('id'));
 
-        // Current image path in storage
+        // Текущий путь к изображению в хранилище
         $currentPath = storage_path('app/public/' . str_replace('/storage/', '', $slider->image_path));
 
-        // Define the new path in the Nuxt project
+        // Определить новый путь в проекте Nuxt
         $newPath = base_path('/stroyka-main/static/sliders/' . basename($slider->image_path));
 
-        // Move the image
+        // Переместить изображение
         if (file_exists($currentPath)) {
             rename($currentPath, $newPath);
 
-            // Update the image_path in the database to the new location
+            // Обновить image_path в базе данных на новое местоположение
             $slider->image_path = '/static/sliders/' . basename($slider->image_path);
             $slider->is_published = true;
             $slider->save();
 
-            Toast::info('Slider published successfully.');
+            Toast::info('Слайдер успешно опубликован.');
         } else {
-            Toast::error('Image file not found.');
+            Toast::error('Файл изображения не найден.');
+        }
+
+        return redirect()->route('platform.systems.sliders');
+    }
+
+    public function unpublish(Request $request)
+    {
+        $slider = Slider::findOrFail($request->get('id'));
+
+        // Текущий путь к изображению в Nuxt
+        $currentPath = base_path('/stroyka-main/static/sliders/' . basename($slider->image_path));
+
+        // Определить путь для возврата изображения в хранилище Laravel
+        $newPath = storage_path('app/public/sliders/' . basename($slider->image_path));
+
+        // Переместить изображение обратно
+        if (file_exists($currentPath)) {
+            rename($currentPath, $newPath);
+
+            // Обновить image_path в базе данных на исходное местоположение
+            $slider->image_path = '/storage/sliders/' . basename($slider->image_path);
+            $slider->is_published = false;
+            $slider->save();
+
+            Toast::info('Слайдер успешно снят с публикации.');
+        } else {
+            Toast::error('Опубликованный файл изображения не найден.');
         }
 
         return redirect()->route('platform.systems.sliders');

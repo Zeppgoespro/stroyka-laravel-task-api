@@ -10,7 +10,7 @@ class SliderController extends Controller
 {
     public function index(): JsonResponse
     {
-        $sliders = Slider::all(['image_path', 'title', 'description']);
+        $sliders = Slider::where('is_published', true)->get(['image_path', 'title', 'description']);
         return response()->json($sliders);
     }
 }
