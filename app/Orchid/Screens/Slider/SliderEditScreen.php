@@ -74,6 +74,7 @@ class SliderEditScreen extends Screen
                 Picture::make('slider.image_path')
                     ->title('Slider Image')
                     ->required()
+                    ->path('/sliders')
                     ->targetRelativeUrl(),
 
                 Input::make('slider.title')

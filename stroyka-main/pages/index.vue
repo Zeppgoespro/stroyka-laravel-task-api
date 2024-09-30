@@ -1,39 +1,51 @@
 <template>
-  <div class="box-intro">
+  <div class="box-intro"
+    :style="{ backgroundImage: currentSlider() ? `url(_nuxt${currentSlider().image_path})` : '' }"
+  >
     <Header theme="white" :is-fixed="true" />
 
-    <div class="content-container">
-      <div class="arrow-left">
-        <button type="button">
-          <Icon name="arrow-left" />
-        </button>
-      </div>
+    <div>
+      <div class="content-container">
+        <div class="arrow-left">
+          <button type="button"
+            @click="prevSlider"
+          >
+            <Icon name="arrow-left" />
+          </button>
+        </div>
 
-      <div class="content content-width">
-        <div class="title-1">Стройка</div>
-        <div class="title-2">В труднодоступных <br> местах</div>
+        <div class="content content-width">
+          <div class="title-1">Стройка</div>
+          <div class="title-2">В труднодоступных <br> местах</div>
 
-        <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-10 mt-48 mt-lg-0">
-          <div class="arrow-left-mobile d-flex d-lg-none">
-            <button type="button">
-              <Icon name="arrow-left" />
-            </button>
-          </div>
+          <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-10 mt-48 mt-lg-0">
+            <div class="arrow-left-mobile d-flex d-lg-none">
+              <button type="button"
+                @click="prevSlider"
+              >
+                <Icon name="arrow-left" />
+              </button>
+            </div>
 
-          <NuxtLink to="/" class="btn-detail">подробнее »</NuxtLink>
+            <NuxtLink to="/" class="btn-detail">подробнее »</NuxtLink>
 
-          <div class="arrow-right-mobile d-flex d-lg-none">
-            <button type="button">
-              <Icon name="arrow-right" />
-            </button>
+            <div class="arrow-right-mobile d-flex d-lg-none">
+              <button type="button"
+                @click="nextSlider"
+              >
+                <Icon name="arrow-right" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="arrow-right">
-        <button type="button">
-          <Icon name="arrow-right" />
-        </button>
+        <div class="arrow-right">
+          <button type="button"
+            @click="nextSlider"
+          >
+            <Icon name="arrow-right" />
+          </button>
+        </div>
       </div>
     </div>
 
@@ -108,13 +120,44 @@
 </template>
 
 <script>
-import {defineComponent} from 'vue'
+import {defineComponent, onMounted, ref } from 'vue'
 import ButtonDetail from "~/components/buttons/button-detail/ButtonDetail.vue";
 import {TECHNOLOGIES} from "~/helpers/constants.js";
 import TechnologiesSlider2 from "~/components/technologies-slider-2/TechnologiesSlider2.vue";
 
+import { useSliders } from '~/composables/useSliders';
+
 export default defineComponent({
   name: "index",
+  setup() {
+    const sliders = ref([]);
+    const currentIndex = ref(0);
+
+    onMounted(async () => {
+      sliders.value = await useSliders();
+    });
+
+    const currentSlider = () => {
+      return sliders.value.length && sliders.value[currentIndex.value] && sliders.value[currentIndex.value].image_path
+      ? { image_path: `${sliders.value[currentIndex.value].image_path}` }
+      : null;
+    };
+
+    const nextSlider = () => {
+      currentIndex.value = (currentIndex.value + 1) % sliders.value.length;
+    };
+
+    const prevSlider = () => {
+      currentIndex.value = (currentIndex.value - 1 + sliders.value.length) % sliders.value.length;
+    };
+
+    return {
+      sliders,
+      currentSlider,
+      nextSlider,
+      prevSlider
+    };
+  },
   components: {
     TechnologiesSlider2,
     ButtonDetail
@@ -140,8 +183,10 @@ export default defineComponent({
   background-image: url(./../assets/images/index_bg.png);
   background-repeat: no-repeat;
   padding-bottom: 70px;
+  object-fit: cover;
 
   .content-container {
+    align-self: center;
     display: flex;
     align-items: center;
     gap: 154px;

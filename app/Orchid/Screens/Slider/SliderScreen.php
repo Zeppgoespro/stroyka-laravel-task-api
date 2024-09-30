@@ -10,6 +10,9 @@ use Orchid\Screen\Layouts\Table;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
+use Orchid\Screen\Actions\Button;
+use Orchid\Support\Facades\Toast;
+use Illuminate\Http\Request;
 
 class SliderScreen extends Screen
 {
@@ -68,9 +71,48 @@ class SliderScreen extends Screen
                 TD::make('description', 'Description'),
 
                 TD::make('Actions')
-                    ->render(fn(Slider $slider) => Link::make('Edit')
-                        ->route('platform.systems.sliders.edit', $slider)),
+                    ->render(function(Slider $slider) {
+                        $editButton = Link::make('Edit')->route('platform.systems.sliders.edit', $slider);
+
+                        if (!$slider->is_published) {
+                            $publishButton = Button::make('Publish')
+                                ->method('publish')
+                                ->confirm('Publish this slider?')
+                                ->parameters(['id' => $slider->id]);
+                            return $editButton . ' ' . $publishButton;
+                        }
+
+                        return $editButton;
+                    }),
             ]),
         ];
     }
+
+    public function publish(Request $request)
+    {
+        $slider = Slider::findOrFail($request->get('id'));
+
+        // Current image path in storage
+        $currentPath = storage_path('app/public/' . str_replace('/storage/', '', $slider->image_path));
+
+        // Define the new path in the Nuxt project
+        $newPath = base_path('/stroyka-main/static/sliders/' . basename($slider->image_path));
+
+        // Move the image
+        if (file_exists($currentPath)) {
+            rename($currentPath, $newPath);
+
+            // Update the image_path in the database to the new location
+            $slider->image_path = '/static/sliders/' . basename($slider->image_path);
+            $slider->is_published = true;
+            $slider->save();
+
+            Toast::info('Slider published successfully.');
+        } else {
+            Toast::error('Image file not found.');
+        }
+
+        return redirect()->route('platform.systems.sliders');
+    }
+
 }

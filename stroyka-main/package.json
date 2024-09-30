@@ -12,6 +12,7 @@
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
     "@popperjs/core": "^2.11.8",
+    "axios": "^1.7.7",
     "nuxt": "^3.11.2",
     "pinia": "^2.2.2",
     "swiper": "^11.1.1",
